@@ -13,13 +13,13 @@ const getClothing = (req, res) => {
 
 
 const postItem = (req, res) => {
-  // console.log(req.user._id);
 
   const {name, weather, imageUrl} = req.body;
+  console.log(req.user._id);
 
-  console.log(req.body);
+  const owner = req.user._id;
 
-  clothingItem.create({name, weather, imageUrl})
+  clothingItem.create({name, weather, imageUrl, owner})
     .then((item) => {res.send({data:item})
 }).catch((err) => {
       console.error(err);
@@ -49,7 +49,6 @@ const deleteItem = (req, res) => {
 
 const likeItem = (req, res) => {
   const {itemId} = req.params;
-  console.log(req.user._id);
 
   clothingItem.findByIdAndUpdate(
     itemId,

@@ -14,7 +14,7 @@ app.listen(PORT, () => {
   console.log(`App listening at port ${PORT}`);
 })
 app.use(express.json());
-app.use('/', mainRouter);
+
 
 
 
@@ -33,3 +33,4 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/', mainRouter);
