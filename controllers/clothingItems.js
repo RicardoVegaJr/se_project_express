@@ -1,5 +1,5 @@
 const clothingItem = require("../models/clothingItem");
-const getUsersById = require("./users");
+
 
 const getClothing = (req, res) => {
   clothingItem.find({})
@@ -13,8 +13,11 @@ const getClothing = (req, res) => {
 
 
 const postItem = (req, res) => {
+  // console.log(req.user._id);
 
   const {name, weather, imageUrl} = req.body;
+
+  console.log(req.body);
 
   clothingItem.create({name, weather, imageUrl})
     .then((item) => {res.send({data:item})
@@ -46,10 +49,11 @@ const deleteItem = (req, res) => {
 
 const likeItem = (req, res) => {
   const {itemId} = req.params;
+  console.log(req.user._id);
 
   clothingItem.findByIdAndUpdate(
     itemId,
-    { $addToSet: { likes: req.user._id } },
+    { $addToSet: { likes: req.user._id  } },
     { new: true }
   )
   .then((item) => {

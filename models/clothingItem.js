@@ -23,19 +23,19 @@ weather: {
   message: 'You must enter a valid URL',
 },
   },
-//   owner: {
-//   type: mongoose.Schema.Types.ObjectId,
-//   ref: 'User',
-//   required: true
-// },
-//   likes: [{
-//   type: mongoose.Schema.Types.ObjectId,
-//   ref: 'User'
-// }],
-//   createdAt: {
-//   type: Date,
-//   default: Date.now
-//   },
+  owner: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'User',
+  required: true
+},
+  likes: [{
+  type: mongoose.Schema.Types.ObjectId,
+  ref: 'User'
+}],
+  createdAt: {
+  type: Date,
+  default: Date.now
+  },
 });
 
 module.exports = mongoose.model("clothingItem", clothingItemSchema);
