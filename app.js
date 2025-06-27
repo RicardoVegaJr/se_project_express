@@ -6,7 +6,7 @@ const mainRouter = require("./routes/index")
 
 
 
-const { PORT = 3000} = process.env;
+const { PORT = 3001} = process.env;
 
 
 
@@ -34,3 +34,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', mainRouter);
+
+app.use((req, res) => {
+    res.status(404).send({ message: 'Requested item not found' });
+});

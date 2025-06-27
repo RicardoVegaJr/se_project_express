@@ -28,10 +28,8 @@ weather: {
   ref: 'User',
   required: true
 },
-  likes: [{
-  type: mongoose.Schema.Types.ObjectId,
-  ref: 'User'
-}],
+  likes: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }], default: [],
+},
   createdAt: {
   type: Date,
   default: Date.now
