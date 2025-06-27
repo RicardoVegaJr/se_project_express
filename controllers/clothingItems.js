@@ -9,11 +9,10 @@ const {
 
 const getClothing = (req, res) => {
   clothingItem.find({})
-    .then((clothingItem) => res.status(200).send(clothingItem))
-    .catch((err) => {
-      console.error(err);
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: errorMessages.INTERNAL_SERVER_ERROR });
-});
+    .then((clothingItems) => res.status(200).send(clothingItems))
+    .catch(() =>(
+       res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: errorMessages.INTERNAL_SERVER_ERROR })
+));
 };
 
 
@@ -21,15 +20,11 @@ const getClothing = (req, res) => {
 const postItem = (req, res) => {
 
   const {name, weather, imageUrl} = req.body;
-  console.log(req.user._id);
-
   const owner = req.user._id;
 
   clothingItem.create({name, weather, imageUrl, owner})
     .then((item) => {res.status(201).send({data:item})
 }).catch((err) => {
-      console.error(err);
-
       if (err.name === 'ValidationError' ) {
             return res.status(BAD_REQUEST_ERROR_CODE).send({message: errorMessages.BAD_REQUEST})
     }
@@ -51,7 +46,6 @@ const deleteItem = (req, res) => {
       res.status(200).send({ message: "Item delete successfully", data: item });
     })
     .catch((err) => {
-      console.error(err);
       if (err.statusCode === NOT_FOUND_ERROR_CODE) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: errorMessages.NOT_FOUND });
       }
@@ -78,7 +72,6 @@ const likeItem = (req, res) => {
       res.status(200).send({ message: "Item liked", data: item });
     })
     .catch((err) => {
-      console.error(err);
       if (err.statusCode === NOT_FOUND_ERROR_CODE) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: errorMessages.NOT_FOUND });
       }
@@ -105,10 +98,9 @@ const dislikeItem = (req, res) => {
     }
     return res.status(200).send({ message: "Item like deleted", data: item });
   })
-  .catch((err) => {
-    console.error(err);
-    return res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: errorMessages.INTERNAL_SERVER_ERROR });
-  });
+  .catch(() => (
+    res.status(INTERNAL_SERVER_ERROR_CODE).send({ message: errorMessages.INTERNAL_SERVER_ERROR })
+  ));
 };
 
 
