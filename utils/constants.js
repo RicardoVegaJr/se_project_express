@@ -3,10 +3,14 @@
 const BAD_REQUEST_ERROR_CODE = 400;
 const NOT_FOUND_ERROR_CODE = 404;
 const INTERNAL_SERVER_ERROR_CODE = 500;
+const UNAUTHORIZED_CODE = 401;
 
 // Error messages//
 
 const errorMessages = {
+  // Message for UNAUTHORIZED_CODE (401) //
+  UNAUTHORIZED:
+    "Incorrect email or password.",
   // Message for NOT_FOUND_ERROR_CODE (404)//
   NOT_FOUND:
     "There is no user or clothing item with the requested id of the request was sent to a non-existent address.",
@@ -23,5 +27,6 @@ module.exports = {
   BAD_REQUEST_ERROR_CODE,
   NOT_FOUND_ERROR_CODE,
   INTERNAL_SERVER_ERROR_CODE,
+  UNAUTHORIZED_CODE,
   errorMessages,
 };
