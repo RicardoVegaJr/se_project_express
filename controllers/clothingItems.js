@@ -40,16 +40,28 @@ const postItem = (req, res) => {
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
+const userId = req.user._id;
+
 
   clothingItem
-    .findByIdAndDelete(itemId)
+    .findById(itemId)
     .orFail(() => {
       const error = new Error(errorMessages.NOT_FOUND);
       error.statusCode = NOT_FOUND_ERROR_CODE;
       return error;
     })
     .then((item) => {
-      res.status(200).send({ message: "Item delete successfully", data: item });
+
+      if (item.owner.toString() === userId) {
+        return clothingItem.findByIdAndDelete(itemId)
+          .then((deletedItem) => {
+            res.status(200).send({ message: "Item deleted successfully", data: deletedItem });
+          });
+      } else {
+        return res
+          .status(FORBIDDEN_ERROR_CODE)
+          .send({ message: errorMessages.FORBIDDEN });
+      }
     })
     .catch((err) => {
       if (err.statusCode === NOT_FOUND_ERROR_CODE) {

@@ -9,6 +9,8 @@ const {
 } = require("../utils/constants");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../utils/config");
+const user = require("../models/user");
+console.log(JWT_SECRET);
 
 const getUsers = (req, res) => {
   User.find({})
@@ -21,12 +23,11 @@ const getUsers = (req, res) => {
 };
 
 const getCurrentUser = (req, res) => {
-  const { id } = req.user;
+  const { _id } = req.user;
 
-  User.findById(id)
+  User.findById(_id)
     .then((user) => {
       if (!user) {
-        console.log(req.user);
         return res
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: errorMessages.NOT_FOUND });
@@ -46,7 +47,7 @@ const getCurrentUser = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  const {name, avatar, email, password} = req.body;
+  const { name, avatar, email, password } = req.body;
   bcrypt
     .hash(password, 10)
     .then((hashedPassword) =>
@@ -84,11 +85,76 @@ const login = (req, res) => {
       });
       return res.status(200).send({ token });
     })
-    .catch(() => {
+    .catch((err) => {
+      // <-- Capture the error object here
+      console.error("Login error:", err); // <-- Log the full error for debugging
+      // You can also add more specific checks for err.name or err.message if needed
       return res
         .status(UNAUTHORIZED_CODE)
-        .send({ message: errorMessages.UNAUTHORIZED})
+        .send({
+          message:
+            errorMessages.UNAUTHORIZED ||
+            "Authentication failed. Invalid credentials.",
+        });
     });
 };
 
-module.exports = { getUsers, getCurrentUser, createUser, login };
+const updateProfile = (req, res) => {
+  const userId = req.user._id;
+  const { name, avatar } = req.body;
+
+  const updateFields = {};
+  if (name) {
+    updateFields.name = name;
+  }
+  if (avatar) {
+    updateFields.avatar = avatar;
+  }
+
+  if (Object.keys(updateFields).length === 0) {
+    return res
+      .status(BAD_REQUEST_ERROR_CODE)
+      .send({ message: "No fields provided for update." });
+  }
+
+  User.findByIdAndUpdate(
+    userId,
+    { $set: updateFields },
+    { new: true, runValidators: true }
+  )
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(NOT_FOUND_ERROR_CODE)
+          .send({ message: errorMessages.NOT_FOUND || "User not found." });
+      }
+      res.status(200).send(user);
+    })
+    .catch((err) => {
+      console.error("Error updating user profile:", err);
+      if (err.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST_ERROR_CODE)
+          .send({
+            message:
+              errorMessages.BAD_REQUEST || `Validation error: ${err.message}`,
+          });
+      }
+      if (err.name === "CastError") {
+        return res
+          .status(BAD_REQUEST_ERROR_CODE)
+          .send({
+            message: errorMessages.BAD_REQUEST || "Invalid user ID format.",
+          });
+      }
+      return res
+        .status(INTERNAL_SERVER_ERROR_CODE)
+        .send({
+          message:
+            errorMessages.INTERNAL_SERVER_ERROR ||
+            "An internal server error occurred.",
+        });
+    });
+};
+
+module.exports = { getUsers, getCurrentUser, createUser, login, updateProfile };

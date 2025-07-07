@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = require('../utils/config');
+console.log(JWT_SECRET);
 
 const authMiddleware = (req, res, next) => {
 
@@ -7,19 +9,20 @@ const authMiddleware = (req, res, next) => {
 if (!authorization || !authorization.startsWith('Bearer ')) {
     return res
       .status(401)
-      .send({ message: 'Authorization required' });
+      .send({ message: 'error 1' });
   }
   const token = authorization.replace('Bearer ', '');
   let payload;
 
   try {
     // trying to verify the token
-    payload = jwt.verify(token, 'some-secret-key');
+    payload = jwt.verify(token, JWT_SECRET);
+
   } catch (err) {
     // we return an error if something goes wrong
     return res
       .status(401)
-      .send({ message: 'Authorization required' });
+      .send({ message: 'error 2' });
   }
   req.user = payload; // assigning the payload to the request object
 

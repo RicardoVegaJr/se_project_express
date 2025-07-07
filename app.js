@@ -1,11 +1,10 @@
 const express = require("express");
-const authMiddleware = require("./middlewares/auth");
 const app = express();
 const mongoose = require("mongoose");
 const mainRouter = require("./routes/index");
 const { NOT_FOUND_ERROR_CODE } = require("./utils/constants");
 const { errorMessages } = require("./utils/constants");
-
+const cors = require("cors");
 
 
 const { PORT = 3001 } = process.env;
@@ -22,16 +21,11 @@ mongoose
   })
   .catch(console.error);
 
-// app.use((req, res, next) => {
-//   req.user = {
-//     _id: "683cccfbd7e03b6e12a81200",
-//   };
-//   next();
-// });
 
-app.use(authMiddleware);
+
 
 app.use("/", mainRouter);
+app.use(cors());
 
 
 app.use((req, res) => {
