@@ -1,26 +1,17 @@
-const User = require("../models/user");
 const bcrypt = require("bcryptjs");
-const { errorMessages } = require("../utils/constants");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+
+const { errorMessages} = require("../utils/constants");
 const {
   BAD_REQUEST_ERROR_CODE,
   NOT_FOUND_ERROR_CODE,
   INTERNAL_SERVER_ERROR_CODE,
   UNAUTHORIZED_CODE,
+  CONFLICT_ERROR_CODE,
 } = require("../utils/constants");
-const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = require("../utils/config");
-const user = require("../models/user");
-console.log(JWT_SECRET);
 
-const getUsers = (req, res) => {
-  User.find({})
-    .then((users) => res.status(200).send(users))
-    .catch(() =>
-      res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR })
-    );
-};
+const { JWT_SECRET } = require("../utils/config");
 
 const getCurrentUser = (req, res) => {
   const { _id } = req.user;
@@ -64,10 +55,10 @@ const createUser = (req, res) => {
       res.status(201).send(userObject);
     })
     .catch((err) => {
-      if (err.name === "ValidationError") {
+      if (err.code === 11000) {
         return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
+          .status(CONFLICT_ERROR_CODE)
+          .send({ message: errorMessages.CONFLICT});
       }
       return res
         .status(INTERNAL_SERVER_ERROR_CODE)
@@ -78,6 +69,11 @@ const createUser = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res
+      .status(BAD_REQUEST_ERROR_CODE)
+      .send({ message: errorMessages.BAD_REQUEST });
+  }
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
@@ -86,16 +82,14 @@ const login = (req, res) => {
       return res.status(200).send({ token });
     })
     .catch((err) => {
-      // <-- Capture the error object here
-      console.error("Login error:", err); // <-- Log the full error for debugging
-      // You can also add more specific checks for err.name or err.message if needed
-      return res
-        .status(UNAUTHORIZED_CODE)
-        .send({
-          message:
-            errorMessages.UNAUTHORIZED ||
-            "Authentication failed. Invalid credentials.",
-        });
+      if (err.message === "Incorrect email or password") {
+        return res
+          .status(UNAUTHORIZED_CODE)
+          .send({ message: errorMessages.UNAUTHORIZED });
+      }
+      return res.status(INTERNAL_SERVER_ERROR_CODE).send({
+        message: errorMessages.INTERNAL_SERVER_ERROR,
+      });
     });
 };
 
@@ -117,7 +111,7 @@ const updateProfile = (req, res) => {
       .send({ message: "No fields provided for update." });
   }
 
-  User.findByIdAndUpdate(
+  return User.findByIdAndUpdate(
     userId,
     { $set: updateFields },
     { new: true, runValidators: true }
@@ -128,33 +122,27 @@ const updateProfile = (req, res) => {
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: errorMessages.NOT_FOUND || "User not found." });
       }
-      res.status(200).send(user);
+      return res.status(200).send(user);
     })
     .catch((err) => {
-      console.error("Error updating user profile:", err);
+
       if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({
-            message:
-              errorMessages.BAD_REQUEST || `Validation error: ${err.message}`,
-          });
+        return res.status(BAD_REQUEST_ERROR_CODE).send({
+          message:
+            errorMessages.BAD_REQUEST || `Validation error: ${err.message}`,
+        });
       }
       if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({
-            message: errorMessages.BAD_REQUEST || "Invalid user ID format.",
-          });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({
-          message:
-            errorMessages.INTERNAL_SERVER_ERROR ||
-            "An internal server error occurred.",
+        return res.status(BAD_REQUEST_ERROR_CODE).send({
+          message: errorMessages.BAD_REQUEST || "Invalid user ID format.",
         });
+      }
+      return res.status(INTERNAL_SERVER_ERROR_CODE).send({
+        message:
+          errorMessages.INTERNAL_SERVER_ERROR ||
+          "An internal server error occurred.",
+      });
     });
 };
 
-module.exports = { getUsers, getCurrentUser, createUser, login, updateProfile };
+module.exports = {getCurrentUser, createUser, login, updateProfile };

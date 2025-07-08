@@ -5,6 +5,7 @@ const NOT_FOUND_ERROR_CODE = 404;
 const INTERNAL_SERVER_ERROR_CODE = 500;
 const UNAUTHORIZED_CODE = 401;
 const FORBIDDEN_ERROR_CODE = 403;
+const CONFLICT_ERROR_CODE = 409;
 
 // Error messages//
 
@@ -25,6 +26,9 @@ const errorMessages = {
 
   // Message for FORBIDDEN_ERROR_CODE (403)//
   FORBIDDEN: "Forbidden. You do not have permission to perform this action.",
+
+  // Message for CONFLICT_ERROR_CODE (409)//
+  CONFLICT: "A user with this email address already exists.",
 };
 
 module.exports = {
@@ -33,5 +37,6 @@ module.exports = {
   INTERNAL_SERVER_ERROR_CODE,
   UNAUTHORIZED_CODE,
   FORBIDDEN_ERROR_CODE,
+  CONFLICT_ERROR_CODE,
   errorMessages,
 };

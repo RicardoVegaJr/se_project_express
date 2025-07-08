@@ -1,11 +1,14 @@
 const express = require("express");
+
 const app = express();
 const mongoose = require("mongoose");
+const cors = require("cors");
+
+app.use(cors());
+
 const mainRouter = require("./routes/index");
 const { NOT_FOUND_ERROR_CODE } = require("./utils/constants");
 const { errorMessages } = require("./utils/constants");
-const cors = require("cors");
-
 
 const { PORT = 3001 } = process.env;
 
@@ -21,12 +24,7 @@ mongoose
   })
   .catch(console.error);
 
-
-
-
 app.use("/", mainRouter);
-app.use(cors());
-
 
 app.use((req, res) => {
   res.status(NOT_FOUND_ERROR_CODE).send({ message: errorMessages.NOT_FOUND });

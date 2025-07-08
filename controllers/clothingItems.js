@@ -4,6 +4,7 @@ const {
   BAD_REQUEST_ERROR_CODE,
   NOT_FOUND_ERROR_CODE,
   INTERNAL_SERVER_ERROR_CODE,
+  FORBIDDEN_ERROR_CODE,
 } = require("../utils/constants");
 
 const getClothing = (req, res) => {
@@ -57,11 +58,11 @@ const userId = req.user._id;
           .then((deletedItem) => {
             res.status(200).send({ message: "Item deleted successfully", data: deletedItem });
           });
-      } else {
+      }
         return res
           .status(FORBIDDEN_ERROR_CODE)
           .send({ message: errorMessages.FORBIDDEN });
-      }
+
     })
     .catch((err) => {
       if (err.statusCode === NOT_FOUND_ERROR_CODE) {
