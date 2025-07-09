@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const { errorMessages} = require("../utils/constants");
+const { errorMessages } = require("../utils/constants");
 const {
   BAD_REQUEST_ERROR_CODE,
   NOT_FOUND_ERROR_CODE,
@@ -55,10 +55,15 @@ const createUser = (req, res) => {
       res.status(201).send(userObject);
     })
     .catch((err) => {
+      if (err.name === "ValidationError") {
+        return res
+          .status(BAD_REQUEST_ERROR_CODE)
+          .send({ message: errorMessages.BAD_REQUEST });
+      }
       if (err.code === 11000) {
         return res
           .status(CONFLICT_ERROR_CODE)
-          .send({ message: errorMessages.CONFLICT});
+          .send({ message: errorMessages.CONFLICT });
       }
       return res
         .status(INTERNAL_SERVER_ERROR_CODE)
@@ -125,7 +130,6 @@ const updateProfile = (req, res) => {
       return res.status(200).send(user);
     })
     .catch((err) => {
-
       if (err.name === "ValidationError") {
         return res.status(BAD_REQUEST_ERROR_CODE).send({
           message:
@@ -145,4 +149,4 @@ const updateProfile = (req, res) => {
     });
 };
 
-module.exports = {getCurrentUser, createUser, login, updateProfile };
+module.exports = { getCurrentUser, createUser, login, updateProfile };
