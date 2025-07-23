@@ -56,7 +56,7 @@ const userId = req.user._id;
       if (item.owner.toString() === userId) {
         return clothingItem.findByIdAndDelete(itemId)
           .then((deletedItem) => {
-            res.status(200).send({ message: "Item deleted successfully", data: deletedItem });
+            res.status(200).send(deletedItem );
           });
       }
         return res
@@ -96,7 +96,7 @@ const likeItem = (req, res) => {
       return error;
     })
     .then((item) => {
-      res.status(200).send({ message: "Item liked", data: item });
+      res.status(200).send(item);
     })
     .catch((err) => {
       if (err.statusCode === NOT_FOUND_ERROR_CODE) {
@@ -130,7 +130,7 @@ const dislikeItem = (req, res) => {
           .status(NOT_FOUND_ERROR_CODE)
           .send({ message: errorMessages.NOT_FOUND });
       }
-      return res.status(200).send({ message: "Item like deleted", data: item });
+      return res.status(200).send(item );
     })
     .catch((err) => {
       if (err.name === "CastError") {
