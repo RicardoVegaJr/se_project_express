@@ -1,14 +1,20 @@
-const express = require("express");
+require('dotenv').config();
 
+const express = require("express");
+const errorHandler = require('./middlewares/error-handler');
 const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { errors } = require('celebrate');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
+
 
 app.use(cors());
 
+app.use(requestLogger);
+
+
 const mainRouter = require("./routes/index");
-const { NOT_FOUND_ERROR_CODE } = require("./utils/constants");
-const { errorMessages } = require("./utils/constants");
 
 const { PORT = 3001 } = process.env;
 
@@ -26,6 +32,10 @@ mongoose
 
 app.use("/", mainRouter);
 
-app.use((req, res) => {
-  res.status(NOT_FOUND_ERROR_CODE).send({ message: errorMessages.NOT_FOUND });
-});
+app.use(errorLogger);
+
+app.use(errors());
+
+
+app.use(errorHandler);
+

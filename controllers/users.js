@@ -1,43 +1,28 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-
+const { BadRequestError } = require("../errors/BadRequestError");
+const { ConflictError } = require("../errors/ConflictError");
+const { NotFoundError } = require("../errors/NotFoundError");
+const { UnauthorizedError } = require("../errors/UnauthorizedError");
 const { errorMessages } = require("../utils/constants");
-const {
-  BAD_REQUEST_ERROR_CODE,
-  NOT_FOUND_ERROR_CODE,
-  INTERNAL_SERVER_ERROR_CODE,
-  UNAUTHORIZED_CODE,
-  CONFLICT_ERROR_CODE,
-} = require("../utils/constants");
 
 const { JWT_SECRET } = require("../utils/config");
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   const { _id } = req.user;
 
   User.findById(_id)
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: errorMessages.NOT_FOUND });
+        throw new NotFoundError(errorMessages.NOT_FOUND);
       }
       return res.status(200).send(user);
     })
-    .catch((err) => {
-      if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
-      }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR });
-    });
+    .catch(next);
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
   bcrypt
     .hash(password, 10)
@@ -56,49 +41,37 @@ const createUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
+        return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
       if (err.code === 11000) {
-        return res
-          .status(CONFLICT_ERROR_CODE)
-          .send({ message: errorMessages.CONFLICT });
+        return next(new ConflictError(errorMessages.CONFLICT));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR });
+      return next(err);
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(BAD_REQUEST_ERROR_CODE)
-      .send({ message: errorMessages.BAD_REQUEST });
+    throw new BadRequestError(errorMessages.BAD_REQUEST);
   }
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      return res.status(200).send({token});
+      return res.status(200).send({ token });
     })
     .catch((err) => {
       if (err.message === "Incorrect email or password") {
-        return res
-          .status(UNAUTHORIZED_CODE)
-          .send({ message: errorMessages.UNAUTHORIZED });
+        return next(new UnauthorizedError(errorMessages.UNAUTHORIZED));
       }
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({
-        message: errorMessages.INTERNAL_SERVER_ERROR,
-      });
+      return next(err);
     });
 };
 
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
 
@@ -111,9 +84,7 @@ const updateProfile = (req, res) => {
   }
 
   if (Object.keys(updateFields).length === 0) {
-    return res
-      .status(BAD_REQUEST_ERROR_CODE)
-      .send({ message: "No fields provided for update." });
+    throw new BadRequestError(errorMessages.BAD_REQUEST);
   }
 
   return User.findByIdAndUpdate(
@@ -123,29 +94,15 @@ const updateProfile = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: errorMessages.NOT_FOUND || "User not found." });
+        throw new NotFoundError(errorMessages.NOT_FOUND);
       }
       return res.status(200).send(user);
     })
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR_CODE).send({
-          message:
-            errorMessages.BAD_REQUEST || `Validation error: ${err.message}`,
-        });
+        return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
-      if (err.name === "CastError") {
-        return res.status(BAD_REQUEST_ERROR_CODE).send({
-          message: errorMessages.BAD_REQUEST || "Invalid user ID format.",
-        });
-      }
-      return res.status(INTERNAL_SERVER_ERROR_CODE).send({
-        message:
-          errorMessages.INTERNAL_SERVER_ERROR ||
-          "An internal server error occurred.",
-      });
+      return next(err);
     });
 };
 

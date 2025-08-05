@@ -1,24 +1,19 @@
 const clothingItem = require("../models/clothingItem");
+const { BadRequestError } = require("../errors/BadRequestError");
+const { ForbiddenError } = require("../errors/ForbiddenError");
+const { NotFoundError } = require("../errors/NotFoundError");
 const { errorMessages } = require("../utils/constants");
-const {
-  BAD_REQUEST_ERROR_CODE,
-  NOT_FOUND_ERROR_CODE,
-  INTERNAL_SERVER_ERROR_CODE,
-  FORBIDDEN_ERROR_CODE,
-} = require("../utils/constants");
 
-const getClothing = (req, res) => {
+const getClothing = (req, res, next) => {
   clothingItem
     .find({})
     .then((clothingItems) => res.status(200).send(clothingItems))
-    .catch(() =>
-      res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR })
-    );
+    .catch((err) => {
+      return next(err);
+    });
 };
 
-const postItem = (req, res) => {
+const postItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
   const owner = req.user._id;
 
@@ -29,59 +24,38 @@ const postItem = (req, res) => {
     })
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
+        return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR });
+      return next(err);
     });
 };
 
-const deleteItem = (req, res) => {
+const deleteItem = (req, res, next) => {
   const { itemId } = req.params;
-const userId = req.user._id;
-
+  const userId = req.user._id;
 
   clothingItem
     .findById(itemId)
     .orFail(() => {
-      const error = new Error(errorMessages.NOT_FOUND);
-      error.statusCode = NOT_FOUND_ERROR_CODE;
-      return error;
+      throw new NotFoundError(errorMessages.NOT_FOUND);
     })
     .then((item) => {
-
       if (item.owner.toString() === userId) {
-        return clothingItem.findByIdAndDelete(itemId)
-          .then((deletedItem) => {
-            res.status(200).send(deletedItem );
-          });
+        return clothingItem.findByIdAndDelete(itemId).then((deletedItem) => {
+          res.status(200).send(deletedItem);
+        });
       }
-        return res
-          .status(FORBIDDEN_ERROR_CODE)
-          .send({ message: errorMessages.FORBIDDEN });
-
+      throw new ForbiddenError(errorMessages.FORBIDDEN);
     })
     .catch((err) => {
-      if (err.statusCode === NOT_FOUND_ERROR_CODE) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: errorMessages.NOT_FOUND });
-      }
       if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
+        return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR });
+      return next(err);
     });
 };
 
-const likeItem = (req, res) => {
+const likeItem = (req, res, next) => {
   const { itemId } = req.params;
 
   clothingItem
@@ -91,31 +65,20 @@ const likeItem = (req, res) => {
       { new: true }
     )
     .orFail(() => {
-      const error = new Error(errorMessages.NOT_FOUND);
-      error.statusCode = NOT_FOUND_ERROR_CODE;
-      return error;
+      throw new NotFoundError(errorMessages.NOT_FOUND);
     })
     .then((item) => {
       res.status(200).send(item);
     })
     .catch((err) => {
-      if (err.statusCode === NOT_FOUND_ERROR_CODE) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: errorMessages.NOT_FOUND });
-      }
       if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
+        return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR });
+      return next(err);
     });
 };
 
-const dislikeItem = (req, res) => {
+const dislikeItem = (req, res, next) => {
   const { itemId } = req.params;
 
   clothingItem
@@ -126,21 +89,15 @@ const dislikeItem = (req, res) => {
     )
     .then((item) => {
       if (!item) {
-        return res
-          .status(NOT_FOUND_ERROR_CODE)
-          .send({ message: errorMessages.NOT_FOUND });
+        throw new NotFoundError(errorMessages.NOT_FOUND);
       }
-      return res.status(200).send(item );
+      return res.status(200).send(item);
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return res
-          .status(BAD_REQUEST_ERROR_CODE)
-          .send({ message: errorMessages.BAD_REQUEST });
+        throw new BadRequestError(errorMessages.BAD_REQUEST);
       }
-      return res
-        .status(INTERNAL_SERVER_ERROR_CODE)
-        .send({ message: errorMessages.INTERNAL_SERVER_ERROR });
+      return next(err);
     });
 };
 
