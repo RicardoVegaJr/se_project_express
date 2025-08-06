@@ -31,11 +31,13 @@ This project leverages a selection of industry-standard tools and powerful web t
 
 ## 📸 Visuals & Demo
 
-### API in Action
+https://www.loom.com/share/a8ed24777cdf476fa43d0fd5a7397a94?sid=c33486b7-2e44-40f3-a6af-e69343c19ba6
 
 
 
-### Project Demo Video
+### Project domain
+
+https://wtwrvega.cyberroma.net/
 
 
 
