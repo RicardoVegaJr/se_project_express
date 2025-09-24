@@ -1,26 +1,22 @@
-require('dotenv').config();
+require("dotenv").config();
 
 const express = require("express");
-const errorHandler = require('./middlewares/error-handler');
+
 const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { errors } = require('celebrate');
-const { requestLogger, errorLogger } = require('./middlewares/logger');
-
+const { errors } = require("celebrate");
+const errorHandler = require("./middlewares/error-handler");
+const { requestLogger, errorLogger } = require("./middlewares/logger");
 
 app.use(cors());
 
 app.use(requestLogger);
 
-
 const mainRouter = require("./routes/index");
 
 const { PORT = 3001 } = process.env;
 
-app.listen(PORT, () => {
-  console.log(`App listening at port ${PORT}`);
-});
 app.use(express.json());
 
 mongoose
@@ -30,9 +26,9 @@ mongoose
   })
   .catch(console.error);
 
-  app.get('/crash-test', () => {
+app.get("/crash-test", () => {
   setTimeout(() => {
-    throw new Error('Server will crash now');
+    throw new Error("Server will crash now");
   }, 0);
 });
 
@@ -42,6 +38,8 @@ app.use(errorLogger);
 
 app.use(errors());
 
-
 app.use(errorHandler);
 
+app.listen(PORT, () => {
+  console.log(`App listening at port ${PORT}`);
+});

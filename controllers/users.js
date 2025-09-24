@@ -19,7 +19,12 @@ const getCurrentUser = (req, res, next) => {
       }
       return res.status(200).send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === "NotFoundError") {
+        return next(err);
+      }
+      return next(err);
+    });
 };
 
 const createUser = (req, res, next) => {
@@ -64,7 +69,10 @@ const login = (req, res, next) => {
       return res.status(200).send({ token });
     })
     .catch((err) => {
-      if (err.message === "Incorrect email or password") {
+      if (
+        err.name === "UnauthorizedError" ||
+        err.message === "Incorrect email or password"
+      ) {
         return next(new UnauthorizedError(errorMessages.UNAUTHORIZED));
       }
       return next(err);
@@ -76,22 +84,17 @@ const updateProfile = (req, res, next) => {
   const { name, avatar } = req.body;
 
   const updateFields = {};
-  if (name) {
-    updateFields.name = name;
-  }
-  if (avatar) {
-    updateFields.avatar = avatar;
-  }
+  if (name) updateFields.name = name;
+  if (avatar) updateFields.avatar = avatar;
 
-  if (Object.keys(updateFields).length === 0) {
-    throw new BadRequestError(errorMessages.BAD_REQUEST);
-  }
-
-  return User.findByIdAndUpdate(
-    userId,
-    { $set: updateFields },
-    { new: true, runValidators: true }
-  )
+  return Promise.resolve()
+    .then(() => {
+      User.findByIdAndUpdate(
+        userId,
+        { $set: updateFields },
+        { new: true, runValidators: true }
+      );
+    })
     .then((user) => {
       if (!user) {
         throw new NotFoundError(errorMessages.NOT_FOUND);
@@ -101,6 +104,9 @@ const updateProfile = (req, res, next) => {
     .catch((err) => {
       if (err.name === "ValidationError") {
         return next(new BadRequestError(errorMessages.BAD_REQUEST));
+      }
+      if (err.name === "NotFoundError" || err.name === "BadRequestError") {
+        return next(err);
       }
       return next(err);
     });

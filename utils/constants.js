@@ -11,8 +11,7 @@ const CONFLICT_ERROR_CODE = 409;
 
 const errorMessages = {
   // Message for UNAUTHORIZED_CODE (401) //
-  UNAUTHORIZED:
-    "Incorrect email or password.",
+  UNAUTHORIZED: "Incorrect email or password.",
   // Message for NOT_FOUND_ERROR_CODE (404)//
   NOT_FOUND:
     "There is no user or clothing item with the requested id of the request was sent to a non-existent address.",

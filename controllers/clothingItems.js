@@ -9,7 +9,7 @@ const getClothing = (req, res, next) => {
     .find({})
     .then((clothingItems) => res.status(200).send(clothingItems))
     .catch((err) => {
-      return next(err);
+      next(err);
     });
 };
 
@@ -51,6 +51,12 @@ const deleteItem = (req, res, next) => {
       if (err.name === "CastError") {
         return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
+      if (err.name === "NotFoundError") {
+        return next(new NotFoundError(errorMessages.NOT_FOUND));
+      }
+      if (err.name === "ForbiddenError") {
+        return next(new ForbiddenError(errorMessages.FORBIDDEN));
+      }
       return next(err);
     });
 };
@@ -74,6 +80,9 @@ const likeItem = (req, res, next) => {
       if (err.name === "CastError") {
         return next(new BadRequestError(errorMessages.BAD_REQUEST));
       }
+      if (err.name === "NotFoundError") {
+        return next(new NotFoundError(errorMessages.NOT_FOUND));
+      }
       return next(err);
     });
 };
@@ -95,7 +104,10 @@ const dislikeItem = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        throw new BadRequestError(errorMessages.BAD_REQUEST);
+        return next(new BadRequestError(errorMessages.BAD_REQUEST));
+      }
+      if (err.name === "NotFoundError") {
+        return next(err);
       }
       return next(err);
     });
