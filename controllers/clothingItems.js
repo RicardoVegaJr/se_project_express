@@ -1,7 +1,7 @@
 const clothingItem = require("../models/clothingItem");
-const { BadRequestError } = require("../errors/BadRequestError");
-const { ForbiddenError } = require("../errors/ForbiddenError");
-const { NotFoundError } = require("../errors/NotFoundError");
+const  BadRequestError  = require("../errors/BadRequestError");
+const  ForbiddenError  = require("../errors/ForbiddenError");
+const  NotFoundError  = require("../errors/NotFoundError");
 const { errorMessages } = require("../utils/constants");
 
 const getClothing = (req, res, next) => {
